@@ -10,7 +10,7 @@ Note: In this repository, the term "Project Oberon 2013" refers to a re-implemen
 This repository modifies the semantics of the *type* case statement of Oberon-07
 
     CASE x OF
-     | T1: S1
+       T1: S1
      | T2: S2
      | T3: S3
     END
