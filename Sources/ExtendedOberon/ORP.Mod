@@ -964,7 +964,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
       qualident(obj);
       IF obj.class = ORB.Typ THEN typ := obj.type;
         IF (class = ORB.Var) & (typ.form = ORB.Pointer) & (typ.base.form = ORB.Record) OR
-          (class = ORB.Par) & (typ.form = ORB.Record) THEN
+           (class = ORB.Par) & (typ.form = ORB.Record) THEN
           IF typ.form = ORB.Pointer THEN rec := typ.base ELSE rec := typ END ;
           IF rec.mno # -level THEN ORS.Mark("must be bound to record of same scope"); rec := NIL END
         ELSE ORS.Mark("invalid receiver type")

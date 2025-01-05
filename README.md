@@ -202,9 +202,9 @@ Since this is the only place where *obj.exno* is modified, it is easy to see tha
     
 can ever be true is *inside* a type case statement. We can therefore simply insert the check
 
-    PROCEDURE CheckCase(VAR x: ORG.Item; obj: ORB.Object);
-    BEGIN (*obj is a case variable of pointer type in a type case statement*)
-      IF (obj.lev > 0) & (obj.exno > 0) & (obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
+    PROCEDURE CheckCase(VAR x: ORG.Item);
+    BEGIN (*x.obj is a simple identifier of pointer type in a type case statement that is not followed by a selector*)
+      IF (x.obj # NIL) & (x.obj.lev > 0) & (x.obj.exno > 0) & (x.obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
     END CheckCase;
 
 whenever assignments and procedure parameters are parsed:
@@ -218,7 +218,7 @@ whenever assignments and procedure parameters are parsed:
         IF x.mode = ORB.SProc THEN StandProc(obj.val)
         ELSE selector(x);
           IF sym = ORS.becomes THEN (*assignment*)
-            ORS.Get(sym); CheckCase(x, obj); CheckReadOnly(x); expression(y);  (*CheckCase may set x.rdo*)
+            ORS.Get(sym); CheckCase(x); CheckReadOnly(x); expression(y);  (*CheckCase may set x.rdo*)
 
 *2. Passing case variables as procedure parameters*
 
@@ -239,7 +239,7 @@ whenever assignments and procedure parameters are parsed:
       IF sym = ORS.ident THEN
         qualident(obj);  
         IF obj.class = ORB.SFunc THEN StandFunc(x, obj.val, obj.type)
-        ELSE ORG.MakeItem(x, obj, level); selector(x); CheckCase(x, obj);  (*CheckCase may set x.rdo*)
+        ELSE ORG.MakeItem(x, obj, level); selector(x); CheckCase(x);  (*CheckCase may set x.rdo*)
 
 We note that writing the actual error message is deferred to *CheckReadOnly*.
 
@@ -254,7 +254,7 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-numer
 **ORP**
 
 ```diff
---- Oberon-numeric-case-statement/Sources/FPGAOberon2013/ORP.Mod	2025-01-05 14:51:41
+--- Oberon-numeric-case-statement/Sources/FPGAOberon2013/ORP.Mod	2025-01-05 17:34:05
 +++ Oberon-type-case-statement-without-loopholes/Sources/FPGAOberon2013/ORP.Mod	2025-01-05 14:51:21
 @@ -89,6 +89,11 @@
      END
@@ -301,15 +301,17 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-numer
              IF CompTypes(x.type, y.type, FALSE) THEN
                IF (x.type.form <= ORB.Pointer) OR (x.type.form = ORB.Proc) THEN ORG.Store(x, y)
                ELSE ORG.StoreStruct(x, y)
-@@ -630,7 +635,7 @@
+@@ -630,8 +635,8 @@
        ELSIF sym = ORS.case THEN
          ORS.Get(sym); x.obj := NIL; expression(x);
          IF x.type.form IN {ORB.Int, ORB.Byte, ORB.Char} THEN NumericCasePart(x)
 -        ELSIF (x.obj # NIL) &
+-          ((x.type.form = ORB.Pointer) & (x.type.base.form = ORB.Record) OR
 +        ELSIF (x.obj # NIL) & (x.obj.lev > 0) &
-           ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
++          ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
             (x.type.form = ORB.Record) & (x.mode = ORB.Par)) THEN TypeCasePart(x.obj)
          ELSE ORS.Mark("invalid case variable"); SkipCase
+         END ;
 ```
 
 -------------------------------------------------------------------------------------
@@ -321,8 +323,8 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-exten
 **ORP**
 
 ```diff
---- Oberon-extended/Sources/ORP.Mod	2025-01-05 15:01:48
-+++ Oberon-type-case-statement-without-loopholes/Sources/ExtendedOberon/ORP.Mod	2025-01-05 14:58:54
+--- Oberon-extended/Sources/ORP.Mod	2025-01-05 17:24:30
++++ Oberon-type-case-statement-without-loopholes/Sources/ExtendedOberon/ORP.Mod	2025-01-05 17:37:49
 @@ -91,6 +91,11 @@
      END
    END CheckExport;
@@ -368,13 +370,15 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-exten
              IF CompTypes(x.type, y.type, FALSE) THEN
                IF (x.type.form <= ORB.Pointer) OR (x.type.form = ORB.Proc) THEN ORG.Store(x, y)
                ELSE ORG.StoreStruct(x, y)
-@@ -677,7 +682,7 @@
+@@ -677,8 +682,8 @@
        ELSIF sym = ORS.case THEN
          ORS.Get(sym); x.obj := NIL; expression(x);
          IF x.type.form IN {ORB.Int, ORB.Byte, ORB.Char} THEN NumericCasePart(x)
 -        ELSIF (x.obj # NIL) &
+-          ((x.type.form = ORB.Pointer) & (x.type.base.form = ORB.Record) OR
 +        ELSIF (x.obj # NIL) & (x.obj.lev > 0) &
-           ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
++          ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
             (x.type.form = ORB.Record) & (x.mode = ORB.Par)) THEN TypeCasePart(x.obj)
          ELSE ORS.Mark("invalid case variable"); SkipCase
+         END ;
 ```
