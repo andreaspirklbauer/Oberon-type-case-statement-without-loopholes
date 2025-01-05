@@ -89,9 +89,9 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
     END
   END CheckExport;
 
-  PROCEDURE CheckCase(VAR x: ORG.Item; obj: ORB.Object);
-  BEGIN (*obj is a case variable of pointer type in a type case statement*)
-    IF (obj.lev > 0) & (obj.exno > 0) & (obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
+  PROCEDURE CheckCase(VAR x: ORG.Item);
+  BEGIN (*x.obj is a simple identifier of pointer type in a type case statement that is not followed by a selector*)
+    IF (x.obj # NIL) & (x.obj.lev > 0) & (x.obj.exno > 0) & (x.obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
   END CheckCase;
 
   PROCEDURE IsExtension(t0, t1: ORB.Type): BOOLEAN;
@@ -323,7 +323,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
     IF sym = ORS.ident THEN
       qualident(obj);  
       IF obj.class = ORB.SFunc THEN StandFunc(x, obj.val, obj.type)
-      ELSE ORG.MakeItem(x, obj, level); selector(x); CheckCase(x, obj);
+      ELSE ORG.MakeItem(x, obj, level); selector(x); CheckCase(x);
         IF sym = ORS.lparen THEN
           ORS.Get(sym);
           IF (x.type.form = ORB.Proc) & (x.type.base.form # ORB.NoTyp) THEN
@@ -476,7 +476,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
     PROCEDURE TypeCase(obj: ORB.Object; VAR L0: LONGINT);
       VAR typobj: ORB.Object; x: ORG.Item;
         orgtype: ORB.Type;  (*original type of case var*)
-    BEGIN (*obj.lev > 0 & obj.exno > 0*)
+    BEGIN
       IF sym = ORS.ident THEN
         qualident(typobj); ORG.MakeItem(x, obj, level); orgtype := obj.type;
         IF typobj.class # ORB.Typ THEN ORS.Mark("not a type") END ;
@@ -561,7 +561,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
         IF x.mode = ORB.SProc THEN StandProc(obj.val)
         ELSE selector(x);
           IF sym = ORS.becomes THEN (*assignment*)
-            ORS.Get(sym); CheckCase(x, obj); CheckReadOnly(x); expression(y);
+            ORS.Get(sym); CheckCase(x); CheckReadOnly(x); expression(y);
             IF CompTypes(x.type, y.type, FALSE) THEN
               IF (x.type.form <= ORB.Pointer) OR (x.type.form = ORB.Proc) THEN ORG.Store(x, y)
               ELSE ORG.StoreStruct(x, y)

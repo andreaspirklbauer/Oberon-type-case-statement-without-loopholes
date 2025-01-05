@@ -255,14 +255,14 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-numer
 
 ```diff
 --- Oberon-numeric-case-statement/Sources/FPGAOberon2013/ORP.Mod	2024-12-23 23:16:11
-+++ Oberon-type-case-statement-without-loopholes/Sources/FPGAOberon2013/ORP.Mod	2024-12-24 06:16:47
++++ Oberon-type-case-statement-without-loopholes/Sources/FPGAOberon2013/ORP.Mod	2025-01-05 13:26:16
 @@ -89,6 +89,11 @@
      END
    END CheckExport;
  
-+  PROCEDURE CheckCase(VAR x: ORG.Item; obj: ORB.Object);
-+  BEGIN (*obj is a case variable of pointer type in a type case statement*)
-+    IF (obj.lev > 0) & (obj.exno > 0) & (obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
++  PROCEDURE CheckCase(VAR x: ORG.Item);
++  BEGIN (*x.obj is a simple identifier of pointer type in a type case statement that is not followed by a selector*)
++    IF (x.obj # NIL) & (x.obj.lev > 0) & (x.obj.exno > 0) & (x.obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
 +  END CheckCase;
 +
    PROCEDURE IsExtension(t0, t1: ORB.Type): BOOLEAN;
@@ -273,19 +273,10 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-numer
        qualident(obj);  
        IF obj.class = ORB.SFunc THEN StandFunc(x, obj.val, obj.type)
 -      ELSE ORG.MakeItem(x, obj, level); selector(x);
-+      ELSE ORG.MakeItem(x, obj, level); selector(x); CheckCase(x, obj);
++      ELSE ORG.MakeItem(x, obj, level); selector(x); CheckCase(x);
          IF sym = ORS.lparen THEN
            ORS.Get(sym);
            IF (x.type.form = ORB.Proc) & (x.type.base.form # ORB.NoTyp) THEN
-@@ -471,7 +476,7 @@
-     PROCEDURE TypeCase(obj: ORB.Object; VAR L0: LONGINT);
-       VAR typobj: ORB.Object; x: ORG.Item;
-         orgtype: ORB.Type;  (*original type of case var*)
--    BEGIN
-+    BEGIN (*obj.lev > 0 & obj.exno > 0*)
-       IF sym = ORS.ident THEN
-         qualident(typobj); ORG.MakeItem(x, obj, level); orgtype := obj.type;
-         IF typobj.class # ORB.Typ THEN ORS.Mark("not a type") END ;
 @@ -484,12 +489,12 @@
  
      PROCEDURE TypeCasePart(obj: ORB.Object);
@@ -306,7 +297,7 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-numer
          ELSE selector(x);
            IF sym = ORS.becomes THEN (*assignment*)
 -            ORS.Get(sym); CheckReadOnly(x); expression(y);
-+            ORS.Get(sym); CheckCase(x, obj); CheckReadOnly(x); expression(y);
++            ORS.Get(sym); CheckCase(x); CheckReadOnly(x); expression(y);
              IF CompTypes(x.type, y.type, FALSE) THEN
                IF (x.type.form <= ORB.Pointer) OR (x.type.form = ORB.Proc) THEN ORG.Store(x, y)
                ELSE ORG.StoreStruct(x, y)
@@ -332,39 +323,30 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-exten
 **ORP**
 
 ```diff
---- Oberon-extended/Sources/ORP.Mod	2024-12-23 23:27:19
-+++ Oberon-type-case-statement-without-loopholes/Sources/ExtendedOberon/ORP.Mod	2024-12-24 06:17:37
+--- Oberon-extended/Sources/ORP.Mod	2025-01-05 11:54:53
++++ Oberon-type-case-statement-without-loopholes/Sources/ExtendedOberon/ORP.Mod	2025-01-05 13:26:23
 @@ -91,6 +91,11 @@
      END
    END CheckExport;
  
-+  PROCEDURE CheckCase(VAR x: ORG.Item; obj: ORB.Object);
-+  BEGIN (*obj is a case variable of pointer type in a type case statement*)
-+    IF (obj.lev > 0) & (obj.exno > 0) & (obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
++  PROCEDURE CheckCase(VAR x: ORG.Item);
++  BEGIN (*x.obj is a simple identifier of pointer type in a type case statement that is not followed by a selector*)
++    IF (x.obj # NIL) & (x.obj.lev > 0) & (x.obj.exno > 0) & (x.obj.type.form = ORB.Pointer) THEN x.rdo := TRUE END
 +  END CheckCase;
 +
-   PROCEDURE CheckReceiver(VAR x: ORG.Item; proc: ORB.Object);
-   BEGIN
-     IF ~x.deref & (proc.type.dsc.class # ORB.Par) THEN ORS.Mark("incompatible receiver") END
-@@ -367,7 +372,7 @@
+   PROCEDURE IsExtension(t0, t1: ORB.Type): BOOLEAN;
+   BEGIN (*t1 is an extension of t0*)
+     RETURN (t0 = t1) OR (t1 # NIL) & IsExtension(t0, t1.base)
+@@ -354,7 +359,7 @@
      IF sym = ORS.ident THEN
        qualident(obj);
        IF obj.class = ORB.SFunc THEN StandFunc(x, obj.val, obj.type)
 -      ELSE ORG.MakeItem(x, obj); selector(x);
-+      ELSE ORG.MakeItem(x, obj); selector(x); CheckCase(x, obj);
++      ELSE ORG.MakeItem(x, obj); selector(x); CheckCase(x);
          IF sym = ORS.lparen THEN
            ORS.Get(sym);
            IF (x.type.form IN {ORB.Proc, ORB.TProc}) & (x.type.base.form # ORB.NoTyp) THEN
-@@ -530,7 +535,7 @@
-     PROCEDURE TypeCase(obj: ORB.Object; VAR L0: LONGINT);
-       VAR typobj: ORB.Object; x: ORG.Item;
-         orgtype: ORB.Type;  (*original type of case var*)
--    BEGIN
-+    BEGIN (*obj.lev > 0 & obj.exno > 0*)
-       IF sym = ORS.ident THEN
-         qualident(typobj); ORG.MakeItem(x, obj); orgtype := obj.type;
-         IF typobj.class # ORB.Typ THEN ORS.Mark("not a type") END ;
-@@ -543,12 +548,12 @@
+@@ -530,12 +535,12 @@
  
      PROCEDURE TypeCasePart(obj: ORB.Object);
        VAR L0: LONGINT;
@@ -379,16 +361,16 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-exten
      END TypeCasePart;
  
      PROCEDURE CaseLabel(VAR x: ORG.Item);
-@@ -616,7 +621,7 @@
+@@ -603,7 +608,7 @@
          IF x.mode = ORB.SProc THEN StandProc(obj.val)
          ELSE selector(x);
            IF sym = ORS.becomes THEN (*assignment*)
 -            ORS.Get(sym); CheckReadOnly(x); expression(y);
-+            ORS.Get(sym); CheckCase(x, obj); CheckReadOnly(x); expression(y);
++            ORS.Get(sym); CheckCase(x); CheckReadOnly(x); expression(y);
              IF CompTypes(x.type, y.type, FALSE) THEN
                IF (x.type.form <= ORB.Pointer) OR (x.type.form = ORB.Proc) THEN ORG.Store(x, y)
                ELSE ORG.StoreStruct(x, y)
-@@ -690,8 +695,8 @@
+@@ -677,8 +682,8 @@
        ELSIF sym = ORS.case THEN
          ORS.Get(sym); x.obj := NIL; expression(x);
          IF x.type.form IN {ORB.Int, ORB.Byte, ORB.Char} THEN NumericCasePart(x)
