@@ -247,15 +247,15 @@ In the case of *ORP.Parameter*, this is necessary, because *ORP.factor* does *no
 
 -------------------------------------------------------------------------------------
 
-**DIFFERENCES IN PROJECT OBERON 2013 TO THE FULL IMPLEMENTION OF THE NUMERIC AND THE CASE STATEMENT**
+**DIFFERENCES IN PROJECT OBERON 2013 TO THE FULL IMPLEMENTION OF THE NUMERIC CASE STATEMENT**
 
 Differences to the repository **http://github.com/andreaspirklbauer/Oberon-numeric-case-statement**:
 
 **ORP**
 
 ```diff
---- Oberon-numeric-case-statement/Sources/FPGAOberon2013/ORP.Mod	2024-12-23 23:16:11
-+++ Oberon-type-case-statement-without-loopholes/Sources/FPGAOberon2013/ORP.Mod	2025-01-05 13:26:16
+--- Oberon-numeric-case-statement/Sources/FPGAOberon2013/ORP.Mod	2025-01-05 14:51:41
++++ Oberon-type-case-statement-without-loopholes/Sources/FPGAOberon2013/ORP.Mod	2025-01-05 14:51:21
 @@ -89,6 +89,11 @@
      END
    END CheckExport;
@@ -301,17 +301,15 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-numer
              IF CompTypes(x.type, y.type, FALSE) THEN
                IF (x.type.form <= ORB.Pointer) OR (x.type.form = ORB.Proc) THEN ORG.Store(x, y)
                ELSE ORG.StoreStruct(x, y)
-@@ -630,8 +635,8 @@
+@@ -630,7 +635,7 @@
        ELSIF sym = ORS.case THEN
          ORS.Get(sym); x.obj := NIL; expression(x);
          IF x.type.form IN {ORB.Int, ORB.Byte, ORB.Char} THEN NumericCasePart(x)
 -        ELSIF (x.obj # NIL) &
--          ((x.type.form = ORB.Pointer) & (x.type.base.form = ORB.Record) OR
 +        ELSIF (x.obj # NIL) & (x.obj.lev > 0) &
-+          ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
-           (x.type.form = ORB.Record) & (x.mode = ORB.Par)) THEN TypeCasePart(x.obj)
+           ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
+            (x.type.form = ORB.Record) & (x.mode = ORB.Par)) THEN TypeCasePart(x.obj)
          ELSE ORS.Mark("invalid case variable"); SkipCase
-         END ;
 ```
 
 -------------------------------------------------------------------------------------
@@ -323,8 +321,8 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-exten
 **ORP**
 
 ```diff
---- Oberon-extended/Sources/ORP.Mod	2025-01-05 11:54:53
-+++ Oberon-type-case-statement-without-loopholes/Sources/ExtendedOberon/ORP.Mod	2025-01-05 13:26:23
+--- Oberon-extended/Sources/ORP.Mod	2025-01-05 15:01:48
++++ Oberon-type-case-statement-without-loopholes/Sources/ExtendedOberon/ORP.Mod	2025-01-05 14:58:54
 @@ -91,6 +91,11 @@
      END
    END CheckExport;
@@ -370,15 +368,13 @@ Differences to the repository **http://github.com/andreaspirklbauer/Oberon-exten
              IF CompTypes(x.type, y.type, FALSE) THEN
                IF (x.type.form <= ORB.Pointer) OR (x.type.form = ORB.Proc) THEN ORG.Store(x, y)
                ELSE ORG.StoreStruct(x, y)
-@@ -677,8 +682,8 @@
+@@ -677,7 +682,7 @@
        ELSIF sym = ORS.case THEN
          ORS.Get(sym); x.obj := NIL; expression(x);
          IF x.type.form IN {ORB.Int, ORB.Byte, ORB.Char} THEN NumericCasePart(x)
 -        ELSIF (x.obj # NIL) &
--          ((x.type.form = ORB.Pointer) & (x.type.base.form = ORB.Record) OR
 +        ELSIF (x.obj # NIL) & (x.obj.lev > 0) &
-+          ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
-           (x.type.form = ORB.Record) & (x.mode = ORB.Par)) THEN TypeCasePart(x.obj)
+           ((x.type.form = ORB.Pointer) & (x.mode = ORB.Var) & (x.type.base.form = ORB.Record) OR
+            (x.type.form = ORB.Record) & (x.mode = ORB.Par)) THEN TypeCasePart(x.obj)
          ELSE ORS.Mark("invalid case variable"); SkipCase
-         END ;
 ```
