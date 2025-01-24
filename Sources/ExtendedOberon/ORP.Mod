@@ -252,6 +252,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
         ORG.StrToChar(x); ORG.ValueParam(x)
       ELSIF (par.type.form = ORB.Array) & (par.type.base = ORB.byteType) & 
           (par.type.len >= 0) & (par.type.size = x.type.size) THEN
+        IF ~par.rdo THEN CheckReadOnly(x) END ;
         ORG.VarParam(x, par.type)
       ELSE ORS.Mark("incompatible parameters")
       END
